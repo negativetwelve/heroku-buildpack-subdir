@@ -13,7 +13,7 @@ Example `.buildpacks` file:
     $ cat .buildpacks
     api=https://github.com/heroku/heroku-buildpack-ruby.git
     web=https://github.com/heroku/heroku-buildpack-nodejs.git
-    https://github.com/emk/heroku-buildpack-go
+    https://github.com/heroku/heroku-buildpack-go
 
 This would run:
 

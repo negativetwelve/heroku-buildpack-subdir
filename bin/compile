@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+set -e
+
+function indent() {
+  c='s/^/       /'
+  case $(uname) in
+    Darwin) sed -l "$c";;
+    *)      sed -u "$c";;
+  esac
+}
+
+unset GIT_DIR
+
+for BUILDPACK in $(cat $1/.buildpacks); do
+  dir=$(mktemp -t buildpackXXXXX)
+  rm -rf $dir
+
+  subdir=""
+  if [[ $BUILDPACK == *'='* ]]; then
+    subdir=$(echo $BUILDPACK | cut -d"=" -f 1)
+    BUILDPACK=$(echo $BUILDPACK | cut -d"=" -f 2)
+  fi
+
+  url=${BUILDPACK%#*}
+  branch=${BUILDPACK#*#}
+
+  if [ "$branch" == "$url" ]; then
+    branch=""
+  fi
+
+  if [ "$url" != "" ]; then
+    echo "=====> Downloading Buildpack: $url, branch: $branch, to tmp dir $dir, against source's subdir: $subdir"
+
+    if [[ "$url" =~ \.tgz$ ]] || [[ "$url" =~ \.tgz\? ]]; then
+      mkdir -p "$dir"
+      curl -s "$url" | tar xvz -C "$dir" >/dev/null 2>&1
+    else
+      git clone $url $dir >/dev/null 2>&1
+      if [ -f "$dir/.gitmodules" ]; then
+        echo "=====> Detected git submodules. Initializing..."
+        (cd $dir && git submodule update --init --recursive)
+      fi
+    fi
+    cd $dir
+
+    if [ "$branch" != "" ]; then
+      git checkout $branch >/dev/null 2>&1
+    fi
+
+    # Ensure that these files exist.
+    chmod -f +x $dir/bin/{detect,compile,release} || true
+
+    framework=$($dir/bin/detect $1/$subdir)
+
+    if [ $? == 0 ]; then
+      echo "=====> Detected Framework: $framework"
+      # echo "-----> Compiling with BUILD_DIR: $1, SUB_DIR: $subdir"
+      # echo "-----> Ls BUILD_DIR: $(ls -la $1)"
+      # echo "-----> Ls \$3: $(ls -la $3)"
+      # echo "-----> Ls \$2: $(ls -la $2)"
+      # echo "-----> Ls SUB_DIR(\$1/\$subdir): $(ls -la $1/$subdir)"
+      # bin/compile BUILD_DIR CACHE_DIR ENV_DIR
+      $dir/bin/compile $1/$subdir $2 $3
+
+      if [ $? != 0 ]; then
+        exit 1
+      fi
+
+      # check if the buildpack left behind an environment for subsequent ones
+      if [ -e $dir/export ]; then
+        source $dir/export
+      fi
+
+      if [ -x $dir/bin/release ]; then
+        $dir/bin/release $1/$subdir > $1/$subdir/last_pack_release.out
+      fi
+    else
+      echo "Couldn't detect any framework for this buildpack. Exiting."
+      exit 1
+    fi
+  fi
+done
+
+if [[ -e $1/last_pack_release.out ]]; then
+  echo "Using release configuration from last framework ($framework)."
+fi

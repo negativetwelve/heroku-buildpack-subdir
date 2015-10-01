@@ -20,3 +20,7 @@ This would run:
 * The first buildpack would `cd` into an `api` directory and use a `ruby` buildpack.
 * The second would `cd` into a `web` directory and use a `node.js` buildpack.
 * The third would be in the root directory and use a `go` buildpack.
+
+## License
+
+MIT

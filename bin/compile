@@ -72,6 +72,20 @@ for BUILDPACK in $(cat $1/.buildpacks); do
         source $dir/export
       fi
 
+      if [ ! -z $subdir ]; then
+        # check if the buildpack left any executables behind
+        if [ -d $1/$subdir/.heroku ]; then
+          mkdir -p $1/.heroku
+          cp -R $1/$subdir/.heroku/* $1/.heroku
+        fi
+
+        # check if the buildpack left any .profile.d scripts behind
+        if [ -d $1/$subdir/.profile.d ]; then
+          mkdir -p $1/.profile.d
+          cp -R $1/$subdir/.profile.d/* $1/.profile.d
+        fi
+      fi
+
       if [ -x $dir/bin/release ]; then
         $dir/bin/release $1/$subdir > $1/$subdir/last_pack_release.out
       fi

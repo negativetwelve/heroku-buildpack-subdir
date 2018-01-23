@@ -51,7 +51,7 @@ for BUILDPACK in $(cat $1/.buildpacks); do
     # Ensure that these files exist.
     chmod -f +x $dir/bin/{detect,compile,release} || true
 
-    framework=$($dir/bin/detect $1/$subdir)
+    framework=$(bash $dir/bin/detect $1/$subdir)
 
     if [ $? == 0 ]; then
       echo "=====> Detected Framework: $framework"
@@ -61,7 +61,7 @@ for BUILDPACK in $(cat $1/.buildpacks); do
       # echo "-----> Ls \$2: $(ls -la $2)"
       # echo "-----> Ls SUB_DIR(\$1/\$subdir): $(ls -la $1/$subdir)"
       # bin/compile BUILD_DIR CACHE_DIR ENV_DIR
-      $dir/bin/compile $1/$subdir $2 $3
+      bash $dir/bin/compile $1/$subdir $2 $3
 
       if [ $? != 0 ]; then
         exit 1

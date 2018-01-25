@@ -76,23 +76,13 @@ for BUILDPACK in $(cat $1/.buildpacks); do
         # check if the buildpack left any executables behind
         if [ -d $1/$subdir/.heroku ]; then
           mkdir -p $1/.heroku
-          cp -R $1/$subdir/.heroku/* $1/.heroku && rm -rf $1/$subdir/.heroku
-        fi
-
-        if [ -d $1/$subdir/bin ]; then
-          mkdir -p $1/bin
-          cp -R $1/$subdir/bin/* $1/bin && rm -rf $1/$subdir/bin
-        fi
-
-        if [ -d $1/$subdir/vendor ]; then
-          mkdir -p $1/vendor
-          cp -R $1/$subdir/vendor/* $1/vendor && rm -rf $1/$subdir/vendor
+          cp -R $1/$subdir/.heroku/* $1/.heroku
         fi
 
         # check if the buildpack left any .profile.d scripts behind
         if [ -d $1/$subdir/.profile.d ]; then
           mkdir -p $1/.profile.d
-          cp -R $1/$subdir/.profile.d/* $1/.profile.d && rm -rf $1/$subdir/.profile.d
+          cp -R $1/$subdir/.profile.d/* $1/.profile.d
         fi
       fi
 

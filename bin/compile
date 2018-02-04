@@ -12,6 +12,7 @@ function indent() {
 
 unset GIT_DIR
 
+subdirs=()
 for BUILDPACK in $(cat $1/.buildpacks); do
   dir=$(mktemp -t buildpackXXXXX)
   rm -rf $dir
@@ -73,17 +74,7 @@ for BUILDPACK in $(cat $1/.buildpacks); do
       fi
 
       if [ ! -z $subdir ]; then
-        # check if the buildpack left any executables behind
-        if [ -d $1/$subdir/.heroku ]; then
-          mkdir -p $1/.heroku
-          cp -R $1/$subdir/.heroku/* $1/.heroku
-        fi
-
-        # check if the buildpack left any .profile.d scripts behind
-        if [ -d $1/$subdir/.profile.d ]; then
-          mkdir -p $1/.profile.d
-          cp -R $1/$subdir/.profile.d/* $1/.profile.d
-        fi
+          subdirs+=($subdir)
       fi
 
       if [ -x $dir/bin/release ]; then
@@ -95,6 +86,35 @@ for BUILDPACK in $(cat $1/.buildpacks); do
     fi
   fi
 done
+
+# create a special .profile.d script that sources the
+# .profile.d scripts in sub directories when the app starts
+if [[ -f "$3/SUBDIR_ENABLE_PROFILE_SOURCING" ]]; then
+    mkdir -p $1/.profile.d
+    cat >$1/.profile.d/subdir-buildpack.sh <<EOL
+    #!/usr/bin/env bash
+
+    APP_DIR="\$HOME"
+
+    dirs="${subdirs[@]}"
+    for dir in \$dirs
+    do
+      cd "\$dir"
+      export HOME="\$APP_DIR/\$dir"
+
+      files=\$(find .profile.d -maxdepth 1 -name "*.sh" -type f)
+      for script in \$files
+      do
+        source "\$script"
+      done
+
+      export HOME="\$APP_DIR"
+      cd - > /dev/null
+    done
+EOL
+
+    chmod +x $1/.profile.d/subdir-buildpack.sh
+fi
 
 if [[ -e $1/last_pack_release.out ]]; then
   echo "Using release configuration from last framework ($framework)."

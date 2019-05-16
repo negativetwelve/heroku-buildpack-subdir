@@ -2,13 +2,16 @@
 
 Allows you to compose multiple buildpacks with apps in multiple directories. For information regarding adding multiple buildpacks, check out the official docs [here](https://devcenter.heroku.com/articles/using-multiple-buildpacks-for-an-app#adding-a-buildpack).
 
-This buildpack must be at index 1 and all buildpacks following should be at index 2 through N.
+This buildpack must be at index 1 and any other buildpacks following should be at index 2 through N.
+
+
 
 ## Usage
 
     $ heroku buildpacks:set https://github.com/negativetwelve/heroku-buildpack-subdir
 
-Example `.buildpacks` file:
+You don't have to (and, most probably, shouldn't) set buildpacks that are supposed to be managed by this buildpack.
+Instead, you should just include them in a special `.buildpacks` file like this:
 
     $ cat .buildpacks
     api=https://github.com/heroku/heroku-buildpack-ruby.git

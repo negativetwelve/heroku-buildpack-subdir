@@ -62,7 +62,7 @@ for BUILDPACK in $(cat $1/.buildpacks); do
       # echo "-----> Ls \$2: $(ls -la $2)"
       # echo "-----> Ls SUB_DIR(\$1/\$subdir): $(ls -la $1/$subdir)"
       # bin/compile BUILD_DIR CACHE_DIR ENV_DIR
-      export ROOT_BUILD_DIR="$1"
+      export SUBDIR_ROOT_BUILD_DIR="$1"
       $dir/bin/compile $1/$subdir $2 $3
 
       if [ $? != 0 ]; then
